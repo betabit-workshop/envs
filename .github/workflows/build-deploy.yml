@@ -5,28 +5,44 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-
   workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: webapp00
+  AZURE_WEBAPP_PACKAGE_PATH: 'webapp' # Set this to the path to your web app project, defaults to the repository root:
+  DOTNET_VERSION: '6.0.401' # The .NET SDK version to use
 
 permissions:
   id-token: write
   contents: read
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
     steps:
-      - run: echo build
-    # do a checkout
-    # run this code:
-      # cd webapp
-      # dotnet publish -c Release -o package
-      # cd package
-      # zip -r ../package.zip .
+    - uses: actions/checkout@v3
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    - name: Install dependencies
+      run: dotnet restore
+    - name: Build
+      run: |
+        cd webapp
+        dotnet publish -c Release -o package
+        cd package
+        zip -r ../package.zip .
     #upload the package.zip as an artifact called package
     #upload the the bicep file as an artifact called iac
-   
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v3.1.1
+      with:
+      # Artifact name
+        name: webapp00 # optional, default is artifact
+      # A file, directory or wildcard pattern that describes what to upload
+        path: ../package.zip
+      # The desired behavior if no files are found using the provided path.
         
   deploy_dev:
     needs: [build]
