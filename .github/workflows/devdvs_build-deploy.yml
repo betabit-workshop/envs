@@ -2,9 +2,9 @@ name: devdvs_CI-CD-Pipeline
 
 on:
   push:
-    branches: [ "main" ]
+#    branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]
+#    branches: [ "main" ]
 
   workflow_dispatch:
 
@@ -31,24 +31,13 @@ jobs:
         uses: actions/upload-artifact@v3        
         with:          
           name: package          
-          path: package.zip
+          path: webapp/package.zip
       - name: upload bicep
         uses: actions/upload-artifact@v3        
         with:          
           name: iac          
           path: app-service.bicep
-
-
-    # do a checkout
-    # run this code:
-      # cd webapp
-      # dotnet publish -c Release -o package
-      # cd package
-      # zip -r ../package.zip .
-    #upload the package.zip as an artifact called package
-    #upload the the bicep file as an artifact called iac
-   
-        
+       
   deploy_dev:
     needs: [build]
     environment: 
@@ -58,17 +47,51 @@ jobs:
     steps:
       - run: echo create infra
       - run: echo deploy!
-      #download package and iac artifact
-      
-      # do an azure cli login
-      # use these ids
-      #          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-      #          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-      #          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: download package
+        uses: actions/download-artifact@v3
+        with:
+          name: package
+          path: ./  
+      - name: download bicep
+        uses: actions/download-artifact@v3
+        with:
+          name: iac          
+          path: ./
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Run IaC
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az deployment group create -g betabit-workshop-dev -f ./app-service.bicep -p appname=bbws-site-dev
+      - name: Deploy app
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az webapp deploy --resource-group betabit-workshop-dev --name bbws-site-dev --src-path ./package.zip
 
-      # run this az cli command to create the webapp
-      #      az deployment group create -g betabit-workshop-dev -f ./app-service.bicep -p appname=bbws-site-dev
-
-      # run this az cli command to deploy the webapp
-      #  az webapp deploy --resource-group betabit-workshop-dev --name bbws-site-dev --src-path ./package.zip
-              
+#
+#      - run: |
+#            client-id: ${{ secrets.AZURE_CLIENT_ID }}
+#            tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+#            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+#            az deployment group create -g betabit-workshop-dev -f ./app-service.bicep -p appname=bbws-site-dev      
+#            az webapp deploy --resource-group betabit-workshop-dev --name bbws-site-dev --src-path ./package.zip
+#      #download package and iac artifact
+#      
+#      # do an azure cli login
+#      # use these ids
+#                client-id: ${{ secrets.AZURE_CLIENT_ID }}
+#                tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+#                subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+#
+#       run this az cli command to create the webapp
+#            az deployment group create -g betabit-workshop-dev -f ./app-service.bicep -p appname=bbws-site-dev
+#
+#       run this az cli command to deploy the webapp
+#        az webapp deploy --resource-group betabit-workshop-dev --name bbws-site-dev --src-path ./package.zip
+             
