@@ -31,7 +31,7 @@ jobs:
         uses: actions/upload-artifact@v3        
         with:          
           name: package          
-          path: package.zip
+          path: webapp/package.zip
       - name: upload bicep
         uses: actions/upload-artifact@v3        
         with:          
