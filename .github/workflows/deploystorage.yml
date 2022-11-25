@@ -19,5 +19,6 @@ jobs:
   
       - name: 'Run az commands'
         run: |
-          az deployment group create -g betabit-workshop-dev -f ./envs/storage.bicep 
+          cd ..
+          az deployment group create -g betabit-workshop-dev -f ./storage.bicep 
           
