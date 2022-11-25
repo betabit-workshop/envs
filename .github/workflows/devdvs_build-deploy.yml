@@ -51,12 +51,12 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: package
-          path: ./package.zip  
+          path: ./  
       - name: download bicep
         uses: actions/download-artifact@v3
         with:
           name: iac          
-          path: app-service.bicep
+          path: ./
       - name: Azure Login
         uses: azure/login@v1
         with:
